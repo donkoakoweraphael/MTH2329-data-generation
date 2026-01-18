@@ -44,6 +44,9 @@ def plot_generated_curves(x, generated_curves, title="Generated Curves", num_sam
     """
     Plot a few generated curves.
     """
+    x = np.asarray(x).flatten()
+    generated_curves = np.asarray(generated_curves)
+    
     plt.figure(figsize=(10, 5))
     for i in range(min(num_samples, len(generated_curves))):
         plt.plot(x, generated_curves[i], alpha=0.5)
@@ -52,3 +55,37 @@ def plot_generated_curves(x, generated_curves, title="Generated Curves", num_sam
     plt.xlabel("x")
     plt.grid(True, alpha=0.3)
     plt.show()
+
+def plot_curves_from_clusters(x, curves, labels, n_clusters_show=4, n_samples_per_cluster=3):
+    """
+    Plot samples of curves generated from specific clusters.
+    """
+    x = np.asarray(x).flatten()
+    curves = np.asarray(curves)
+    labels = np.asarray(labels).flatten()
+    
+    unique_labels = np.unique(labels)
+    n_display = min(len(unique_labels), n_clusters_show)
+    
+    fig, axes = plt.subplots(1, n_display, figsize=(4*n_display, 3), sharey=True)
+    if n_display == 1: axes = [axes]
+    
+    for i in range(n_display):
+        cluster_id = unique_labels[i]
+        cluster_curves = curves[labels == cluster_id]
+        
+        ax = axes[i]
+        # Plot a few random samples from this cluster
+        indices = np.random.choice(len(cluster_curves), min(len(cluster_curves), n_samples_per_cluster), replace=False)
+        for idx in indices:
+            ax.plot(x, cluster_curves[idx], alpha=0.7)
+            
+        ax.set_title(f"Cluster {cluster_id}")
+        ax.grid(True, alpha=0.3)
+        if i == 0: ax.set_ylabel("Amplitude")
+        ax.set_xlabel("x")
+        
+    plt.suptitle("Exemples de courbes par cluster")
+    plt.tight_layout()
+    plt.show()
+

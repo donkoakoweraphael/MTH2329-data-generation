@@ -38,35 +38,31 @@ def estimate_gaussian_params(x, y):
     mu_est : float or ndarray
     sigma_est : float or ndarray
     """
+    x = np.asarray(x)
+    y = np.asarray(y)
+
     # Handle single curve
     if y.ndim == 1:
         y = y.reshape(1, -1)
         
-    # Ensure y is positive for stability (though original should be)
-    # y = np.maximum(y, 1e-10) 
+    # Ensure y is positive for stability
+    y = np.maximum(y, 1e-10) # Clip to small eps instead of 0 to avoid zero devision in sum_y if curve is all 0
     
     sum_y = np.sum(y, axis=1)
-    # Avoid division by zero
-    sum_y[sum_y == 0] = 1.0
     
     mu_est = np.sum(x * y, axis=1) / sum_y
     
     # Variance
-    # (x - mu)^2. Need broadcasting.
-    # x shape (nbx,), mu shape (N,)
-    # We can do: Var = E[x^2] - (E[x])^2
-    
     mu_est_reshaped = mu_est.reshape(-1, 1) # (N, 1)
-    
-    # Efficient calculation: sum(y * (x - mu)^2)
-    # We'll use the loop or broadcasting
-    # (x - mu)^2 is (N, nbx)
-    
-    # x is (nbx,) -> (1, nbx)
     x_grid = x.reshape(1, -1)
     
     var_est = np.sum(y * (x_grid - mu_est_reshaped)**2, axis=1) / sum_y
-    sigma_est = np.sqrt(var_est)
+    sigma_est = np.sqrt(np.maximum(var_est, 0)) # Clip variance to 0
+    
+    if y.shape[0] == 1:
+        return mu_est[0], sigma_est[0]
+        
+    return mu_est, sigma_est
     
     if y.shape[0] == 1:
         return mu_est[0], sigma_est[0]
